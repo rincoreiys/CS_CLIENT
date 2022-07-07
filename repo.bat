@@ -2,7 +2,6 @@
 echo off
 set action=%1
 
-
 IF "%action%"=="push" (
     git add --all
     git commit -m "PUSH"
@@ -10,7 +9,10 @@ IF "%action%"=="push" (
     git push
 )
 
-@REM IF %F%==1 IF %C%==0 (
-@REM     ::moving the file c to d
-@REM     move "%sourceFile%" "%destinationFile%"
-@REM     )
+IF "%action%"=="pull" (
+    git checkout .
+    git pull
+)
+
+
+
