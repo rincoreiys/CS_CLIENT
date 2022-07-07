@@ -1,8 +1,8 @@
 
-
+echo off
 set action=%1
 
-echo %action%
+
 IF "%action%"=="push" (
     git add --all
     git commit -m "PUSH"
