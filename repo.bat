@@ -1,5 +1,5 @@
 
-
+echo off
 set action=%1
 
 
