@@ -1,8 +1,5 @@
 <template>
-    <!-- {{$store.nodes}} -->
-
     <div class="d-flex   w-100">
-        <!-- {{character}} -->
         <div class="d-flex flex-column" style="flex:1;">
             <div class="d-flex align-items-center flex-shrink-0 p-3 link-dark text-decoration-none ">
                 <router-link to="/character" class="btn  " style="font-weight:bold; height:50px; font-size:22px">
@@ -57,13 +54,19 @@
                         <div class="mb-4">
                             <label for="exampleInputPassword1" class="form-label">Loot Focus</label>
                             <div class="input-group rounded py-1">
-                                <span class="input-group-text " id="basic-addon1"> <i
-                                        class="fa-light fa-hand"></i></span>
                                 <select class="form-select" v-model="config.loot_focus">
                                     <option value="item">Item</option>
                                     <option value="equip">Equip</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="mb-4 d-flex">
+                            <label class="form-label me-auto my-auto" :for="`has_big_pixie`">
+                                Has Big Pixie 
+                            </label>
+                             <input class="form-check-input fluent-input" type="checkbox" :value="character.config.has_big_pixie"       v-model="character.config.has_big_pixie" :id="`has_big_pixie`">
+                    
+                            
                         </div>
                     </form>
                     <button class="btn  rounded-pill w-100  blue-outline" style="font-weight:500; height:50px">Change  Password</button>
@@ -71,6 +74,7 @@
                 <div class="d-flex flex-column p-5" style="flex:5">
 
                     <div class="d-flex  mb-5" >
+                        
                         <template v-if="search_mode">
                            <div class="input-group rounded flat" >
                                 <span class="input-group-text border-0" id="basic-addon1" style="font-size:20px">
@@ -99,12 +103,14 @@
                     </div>
                     <!-- {{ selected_routine }}
                     {{ config }} -->
-                    <div style="overflow:auto; flex:1" class="p-2">
+                    <div style="overflow:auto; flex:1" class="" v-if="selected_group !== 'Selected'">
                         <tr v-for="(routine, i ) in routine_list" :key="i"
                             style="border-bottom: 1px solid rgba(0,0,0,0.03) ; display:inline-table;  width:100%"
-                            @mouseenter="hover_index = i">
+                            @mouseenter="hover_index = i"
+                            class="p-1"
+                            >
                             <td style="width:50px" class="text-center">
-                                <input class="form-check-input fluent-input" type="checkbox" :value="routine.class_name"  v-model="selected_routine" :id="`routine-option-${i}`">
+                                <input class="form-check-input fluent-input mt-0" type="checkbox" :value="routine.class_name"  v-model="selected_routine" :id="`routine-option-${i}`">
                             </td>
 
                             <td class="py-3 px-3" style="font:16px Arial; font-weight:500; width:250px ">
@@ -126,15 +132,68 @@
                                     :class="config.routine.skip_enter.includes(routine.class_name) ? 'bg-light btn-sm rounded-pill ' : ''" 
                                     v-if="(
                                     (selected_routine.includes(routine.class_name) && hover_index == i) || (config.routine.skip_enter.includes(routine.class_name) && selected_routine.includes(routine.class_name)))
-                                    && routine.routine_type == 'Daily'">
+                                    && routine.routine_type == 'Event'">
 
                                    <i class="fa-solid fa-forward"></i>
                                 </button>
                             </td>
                         </tr>
                     </div>
-                    <button type="button" class="btn btn-primary rounded-pill  px-4 mt-4 ms-auto" @click="save"
+                    <draggable tag="div" :list="ordered_routine" :item-key="'priority'"  style="overflow:auto; flex:1" class=""
+                        handle=".handle"  v-else>
+                        <template #item="{ element, index }">
+                            <div style="border-bottom: 1px solid rgba(0,0,0,0.05  ) ; padding:10px" class="d-flex"  @mouseenter="hover_index = index">
+
+                                <td class="handle " style="width:60px">
+                                    <i class="fa-solid fa-grip-dots-vertical"></i>
+                                </td>
+                                
+
+                                <td class=" me-auto" style="font:16px Arial; font-weight:500; ">
+                                    <label class="form-check-label">
+                                        {{ element.class_name }}
+                                    </label>
+                                </td>
+                                 <td class="me-3">
+                                    <button type="button" class="btn" @click="toggle_dk(element)"
+                                        :style="config.routine.require_dk.includes(element.class_name) ? '' : 'opacity:0.3'"
+                                        :class="config.routine.require_dk.includes(element.class_name) ? 'bg-light btn-sm rounded-pill ' : ''" v-if="(
+                                        (selected_routine.includes(element.class_name) && hover_index == index) || (config.routine.require_dk.includes(element.class_name) && selected_routine.includes(element.class_name)))
+                                        && element.routine_type == 'Dungeon'">
+
+                                        <i class=" fa-solid fa-key-skeleton "></i>
+                                    </button>
+                                    <button type="button" class="btn" @click="toggle_skip(element)"
+                                        :style="config.routine.skip_enter.includes(element.class_name) ? '' : 'opacity:0.3'"
+                                        :class="config.routine.skip_enter.includes(element.class_name) ? 'bg-light btn-sm rounded-pill ' : ''" 
+                                        v-if="(
+                                        (selected_routine.includes(element.class_name) && hover_index == index) || (config.routine.skip_enter.includes(element.class_name) && selected_routine.includes(element.class_name)))
+                                        && element.routine_type == 'Event'">
+
+                                    <i class="fa-solid fa-forward"></i>
+                                    </button>
+                                    <div class="d-flex" v-if="element.routine_type == 'Corruption'">
+                                        <span style="align-self:center" class="me-2 text-muted"> Max Floor </span>
+                                          <input type="text" class="form-control form-control-sm" v-model="config.corruption_limit"  style="width:40px"/>
+                                    </div>
+                                  
+                                </td>
+                                 <td   style="width:50px" class="text-center">
+                                   <button type="button" class="btn" @click="delete_from_list(element.class_name)">
+                                    <i class="fa-light fa-trash"></i>
+                                   </button>
+                                    <!-- <input class="form-check-input fluent-input" type="checkbox" :value="element.class_name"  v-model="selected_routine" :id="`routine-option-${i}`"> -->
+                                </td>
+                            </div>
+                        </template>
+                    </draggable>
+                    <div class="d-flex">
+                         <button type="button" class="btn   px-4  mt-4 ms-auto mx-2" @click="saveAndBack"
+                        style="font-weight:500; height:50px">Save & Back</button>
+                    <button type="button" class="btn btn-primary rounded-pill  px-4 mt-4 " @click="save"
                         style="font-weight:500; height:50px">Save</button>
+                    </div>
+                   
                 </div>
             </div>
 
@@ -202,21 +261,29 @@
 import RoutineSelector from './../../components/RoutineSelector.vue'
 import { watch, computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import draggable from 'vuedraggable'
 
 
 const route = useRoute()
+const router = useRouter()
 const search_mode = ref(false)
-store.selected_character = route.params.id
-const character = ref(Object.assign({}, store.accounts[store.selected_character]))
+
+const character = ref(Object.assign({}, store.accounts.find((ac) => ac._id == route.params.id)))
 console.log(character.value)
 
-const selected_routine = ref(JSON.parse(JSON.stringify(store.accounts[store.selected_character].routines)))
-const config = ref(JSON.parse(JSON.stringify(store.accounts[store.selected_character].config)))
+const selected_routine = ref(character.value.routines)
+const ordered_routine = ref(selected_routine.value.map((sr) => store.routines.find(r => sr == r.class_name )).filter(r => !!r))
+console.log(selected_routine)
+const config = ref(character.value.config)
 const search = ref("")
 const hover_index = ref(-1)
 const selected_group = ref("Selected")
 const character_config = ref({
     require_dk: []
+})
+
+watch(search_mode, (n,o) => {
+    if(!n)  search.value = ""
 })
 const group = ["All", "Selected", "Dungeon", "Daily"]
 const routine_list = computed(() => {
@@ -230,11 +297,46 @@ const routine_list = computed(() => {
     }
 })
 
+function delete_from_list(class_name){
+    let index = ordered_routine.value.indexOf(ordered_routine.value.find((or) => or.class_name == class_name))
+    let originalIndex = selected_routine.value.indexOf(selected_routine.value.find((or) => or == class_name))
+    ordered_routine.value.splice(index, 1)
+    selected_routine.value.splice(originalIndex, 1)
+}
+
+watch(selected_routine, (n, o ) => {
+    
+    if (o.length < n.length){ // ADD EVENT
+        console.log("ADDED")
+        let changes = selected_routine.value.filter((class_name) => !ordered_routine.value.find(or => or.class_name == class_name) )
+        console.log(changes)
+        changes.forEach((class_name, i) => {
+            ordered_routine.value.push(store.routines.find(r => r.class_name == class_name ))
+            ordered_routine.value = ordered_routine.value.filter(r => !!r)
+        })
+    }
+    else if(o.length > n.length){ // REMOVE EVENT
+        let changes = ordered_routine.value.filter((or) => !selected_routine.value.find(r => r == or.class_name) )
+        changes.forEach((class_name) => {
+            let index = ordered_routine.value.indexOf(class_name)
+            ordered_routine.value.splice(index, 1)
+        })
+    }
+    
+})
+
+async function saveAndBack(){
+    await save()
+    router.go(-1)
+
+}
+
 async function save() {
     let account = character.value
     account.config = config.value
-    account.routines = selected_routine.value
-    store.save_character(account)
+    account.routines = ordered_routine.value.map((or) => or.class_name)
+    console.log(account.routines)
+    await store.save_character(account)
 }
 function delete_character() {
     store.delete_character(character.value)

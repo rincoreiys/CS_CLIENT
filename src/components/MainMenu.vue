@@ -7,7 +7,7 @@
       <img src="../assets/icon.png" style="width:30px" />
       <span class="visually-hidden">Icon-only</span>
     </a>
-    <ul class="nav  flex-column my-auto text-center">
+    <ul class="nav  flex-column mt-4 mb-auto text-center">
       <li class="nav-item" v-for="menu in $store.menus" style="
             width: 50px;
             height: 50px;

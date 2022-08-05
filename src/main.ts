@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import {registerSocket} from './router/socket'
 import router from './router'
+
 import { useStore } from './stores/default'
 // import jquery from 'jquery'
 declare global {

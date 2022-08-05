@@ -1,97 +1,138 @@
 <template>
     <!-- {{$store.nodes}} -->
     <div class="d-flex  w-100 ">
-        <div class="d-flex flex-column w-100 p-5 py-0 " style="flex:1; margin-bottom:20px">
-            <ul class="nav nav-pills " id="node-list" role="tablist" style="padding:15px; ">
-                <li class="nav-item" role="presentation" v-for="[key, val] in Object.entries($store.nodes)">
-                    <button class="nav-link"  style="box-shadow:none; outline:transparent" :class="$store.selected_node == key ? 'active' : ''"
-                        data-bs-toggle="tab" type="button" role="tab" @click="$store.selected_node = key">Node {{ key
-                        }}</button>
-                </li>
-            </ul>
-            <!-- {{logged_account.routines}} -->
-        
-            <div class="d-flex flex-column  justify-content-center" style="flex:1; padding:15px; overflow-y:auto">
-                <template v-if="$store.nodes[$store.selected_node].hwnd !== 0">
-                    <template v-if="logged_account">
-                        <RoutineMonitor :routines="routines" v-if="logged_account.routines.length"></RoutineMonitor>
-                    </template>
-                    <template v-else>
-                        <SelectCharacter v-model="changing_character_state"></SelectCharacter>
-                    </template>
-                </template>
-                <template v-else>
-                    <div class="m-auto text-center" style="max-width:360px">
-                        <img src="../assets/blockchain.svg" style="width:90px; filter: grayscale(90%);" />
-                        <div class="mt-4">
-                            Node not Active
+        <div class="d-flex flex-column w-100 " style=" transition: cubic-bezier(0.075, 0.82, 0.165, 1); background-color: #fefefe;">
+            <template v-if="tab == 'routine'">
+                <div class="d-flex" style="flex:1; overflow: auto;" v-if="exist_node">
+                    <div style="width:360px; overflow-y:auto;" class="border-end d-flex flex-column">
+                        <div
+                            class="d-flex align-items-center border-bottom flex-shrink-0 p-3 link-dark text-decoration-none ">
+                            <div class="fs-5 fw-semibold ms-2 me-auto">Node List</div>
                         </div>
-                    </div>
-                </template>
-            </div>
-            <div class="p-1 px-4 m-2 rounded-pill d-flex bg-light border" style=" font-size:14px;">
-                <div class="form-check form-switch me-auto" stlye="flex:auto">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Automate</label>
-                </div>
-                <button class="btn btn-sm">
-                    <i class="fa-regular fa-timer  me-2 my-auto"></i>
+                        <div id="node-list" role="tablist" style="flex:1;  overflow: auto; ">
+                            <div class="d-flex border-bottom px-1" :class="val.state? ' p-3' : ''"
+                                style="" v-for="[key, val] in Object.entries($store.nodes)">
+                                <div class=" d-flex">
+                                    <div class="d-flex justify-content-center align-items-center me-2 fw-light fs-6 text-secondary"
+                                        style="width:45px;height:45px;" alt="Avatar">
+                                        #{{ key }}
+                                    </div>
 
-                    <span>Logs</span>
+                                </div>
+                                <template v-if="val.state">
+                                  <table class="w-100" v-if="val.account">
+                                        <tr>
+                                            <td rowspan="3" style="width:40px; vertical-align: top;">
+                                                <div class="rounded  d-flex justify-content-center align-items-center me-3 fw-bold"
+                                                    :class="'bg-light'" style="width:40px;height:40px;" alt="Avatar">
 
-                    <i class="fa-light fa-angle-up my-auto ms-4 "></i>
-                </button>
+                                                </div>
+                                            </td>
+                                            <td colspan="2">
+                                                <div style="align-self: center;" class=" fw-bold fs-6 ">
+                                                    <span class="badge  "
+                                                        style=" background-color:dodgerblue; font-size: 12px;">S{{val.account.server_number}}</span>
+                                                    {{val.account.character}}
+                                                </div>
 
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-2 pb-3">
+                                                <div class="spinner-border spinner-border-sm" role="status" v-if="val.active_routine">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                                <small class="ms-2 text-secondary">{{val.active_routine ||'Fetching routine....'}}</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="progress me-4" style="height: 2px;">
+                                                    <div class="progress-bar " :style="`width:${(val.account.done.length / val.account.routines.length) *100 }%`" role="progressbar" aria-valuenow="52"
+                                                        aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-secondary">{{val.account.done.length}}/ {{val.account.routines.length}}</small>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </template>
+                                <template v-else >
+                                         <small class="text-secondary ms-2" style="align-self: center;flex:1">Node is Offline</small>
 
-            </div>
-        </div>
-        <div class="d-flex flex-column  " style="padding-left:30px; width: 280px; border-left:1px solid rgba(0,0,0,0.05)" v-if="!!$store.nodes[$store.selected_node].character">
-            <template v-if="$store.nodes[$store.selected_node].hwnd !== 0 && !!$store.nodes[$store.selected_node].character">
-                <div class="my-auto">
-                    <div class="my-4">
-
-                        <div class="rounded-circle  bg-dark d-flex justify-content-center align-items-center ms-4 me-2"
-                            style="width:120px;height:120px; margin-top:20px;  margin-bottom:20px" alt="Avatar">
-                            <i class="fas fa-user-alt"></i>
-                        </div>
-                        <div class="d-flex align-items-center flex-shrink-0  ms-4 link-dark text-decoration-none ">
-                            <div class="mb-4" style="text-align:left">
-                                <h4 class="mb-0" style=" font-size: 18px; line-height:1">
-                                    <span class="badge bg-primary "
-                                        style=" background-color:dodgerblue; font-size: 12px;">S{{
-                                                logged_account.server_number
-                                        }}</span>
-                                    {{ logged_account['character'] }}
-                                </h4>
-                                <small> Online</small>
+                                </template>
                             </div>
                         </div>
-                        <div class="d-inline text-center">
-                            <button class="btn btn-light rounded mx-2 px-4 rounded-pill"
-                                @click="changing_character_state = true">
-                                <i class="fa-light fa-arrows-repeat me-1" style="font-size:18px"></i>
-
-
-                            </button>
-                            <button class="btn btn-light  rounded mx-2 px-4 rounded-pill" style="color:#dc3545"
-                                @click="changing_character_state = true">
-                                <i class="fa-light fa-power-off" style="font-size:18px; "></i>
-                            </button>
-
-                        </div>
+                    </div>
+                    <div style="flex:1; background-color: #fefefe;" class="d-flex flex-column">
+                         <template v-if="node">
+                           <div class=" align-items-center  flex-shrink-0 p-3 link-dark text-decoration-none ">
+                                <div class="fs-5 fw-semibold ms-2 me-auto">Routines</div>
+                                  </div>
+                        </template>
+                      
+                           
+                        <template v-else>
+                            <div class="m-auto text-center " style="max-width:360px">
+                                <img src="../assets/blockchain.svg" style="width:90px; filter: opacity(0.5)" />
+                                <div class="mt-4">
+                                    There's no active Node
+                                </div>
+                            </div>
+                        </template>
+                  
                     </div>
                 </div>
+                <template v-else>
+                   <div class="m-auto text-center " style="max-width:360px">
+                        <img src="../assets/blockchain.svg" style="width:90px; filter: opacity(0.5)" />
+                        <div class="mt-4">
+                             There's no active Node
+                        </div>
+                    </div>
+                </template>
             </template>
-        </div>
+            <div v-if="tab == 'bucket'" id="json-editor"  style="flex:1">
+                <div
+                    class="d-flex align-items-center border-bottom flex-shrink-0 p-3 link-dark text-decoration-none ">
+                    <div class="fs-5 fw-semibold ms-2 me-auto">Server Bucket</div>
+                </div>
+                <JsonEditorVue v-model="$store.bucket"  style="flex:1"/>
 
+
+            </div>
+
+
+        </div>
+        <div class="d-flex flex-column  border-start" style="width: 80px;">
+            <ul class="nav  my-auto text-center ">
+                <li class="nav-item rounded-3 " @click="tab = 'routine'"
+                    style="   width: 50px;    height: 50px;    margin: 15px;  margin-top: 10px;      padding: 10px;   ">
+                    <a class="nav-link p-0 ">
+                        <i class=" fa-calendar-circle-user" :class="tab == 'routine' ? 'fa-solid' : 'fa-light'"
+                            style="font-size:19px;  color:#333; ; vertical-align:sub"></i>
+                    </a>
+                </li>
+                <li class="nav-item rounded-3 "
+                    style="   width: 50px;    height: 50px;    margin: 15px;   margin-top: 10px;   padding: 10px; "
+                    @click="tab = 'bucket'">
+                    <a class="nav-link p-0">
+                        <i class="fa-light fa-database" :class="tab == 'bucket' ? 'fa-solid' : 'fa-light'"
+                            style="font-size:19px; color:#333;  vertical-align:sub"></i>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
     </div>
 </template>
 <style>
-
-.blue-outline{
-    border: 2px solid rgb(194, 219, 254) !important; 
+.blue-outline {
+    border: 2px solid rgb(194, 219, 254) !important;
 
 }
+
 #node-list {
     border-color: rgba(0, 0, 0, 0.05)
 }
@@ -170,37 +211,49 @@
     height: 50px;
     border-radius: 50%;
 }
-
 </style>
 <script setup>
 import SelectCharacter from './Node/SelectCharacter.vue'
 import RoutineSelector from './../components/RoutineSelector.vue'
 import RoutineMonitor from './../components/RoutineMonitor.vue'
+
+import JsonEditorVue from 'json-editor-vue'
 import { watch, computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
 const route = useRoute()
-const tab = ref(0)
 const changing_character_state = ref(false)
+const tab = ref('routine')
 const router = useRouter()
-let node_number = route.params.node_number
+const node_number = computed(() => {
+    return !!route.params.node_number ? parseInt(route.params.node_number) : 1
+})
 
-if (!!node_number) store.selected_node = parseInt(node_number)
-else {
-    store.selected_node = 1 // DEFAULT VALUE
-    Object.entries(store.nodes).forEach(([i, n])=> {
-    
-        if (n.hwnd !== 0){
-            store.selected_node = parseInt(i)
-            return
-        }
-    })
-    router.push("/node/"+store.selected_node)
-    
-}
+watch(() => store.selected_node, (n, o) => {
+    tab.value = 'routine'
+})
 
-store.selected_character = store.nodes[store.selected_node].character
-const logged_account = computed(() => store.accounts[store.selected_character])
-const routines = logged_account.value.routines.map((lr) => store.routines.find((sr) => sr.class_name == lr))    
+if (typeof node_number.value == "undefined") router.push("/node/1")
+
+
+
+const logged_account = computed(() => {
+    let account = Object.assign({}, store.nodes[node_number.value].account)
+    if (account) {
+        //POPULATED ROUTINES
+        account.routines = account.routines.map(ar => {
+            let routine = store.routines.find(r => r.class_name == ar)
+            if (routine) {
+                routine.done = account.done.includes(routine['class_name'])
+            }
+            return routine
+        }).filter(ar => !!ar)
+    }
+    return account
+})
+
+const exist_node = computed(() => Object.values(store.nodes).find(n => n.state) )
+const node = computed(() => store.nodes[node_number.value])
+
+
 
 </script>
