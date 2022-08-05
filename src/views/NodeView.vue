@@ -71,17 +71,6 @@
                                 <div class="fs-5 fw-semibold ms-2 me-auto">Routines</div>
                                   </div>
                         </template>
-                      
-                           
-                        <template v-else>
-                            <div class="m-auto text-center " style="max-width:360px">
-                                <img src="../assets/blockchain.svg" style="width:90px; filter: opacity(0.5)" />
-                                <div class="mt-4">
-                                    There's no active Node
-                                </div>
-                            </div>
-                        </template>
-                  
                     </div>
                 </div>
                 <template v-else>
